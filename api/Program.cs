@@ -129,7 +129,7 @@ builder.Services.AddCors(options => options.AddPolicy("IncidentLensWeb", policy 
 var telemetry = builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(
         serviceName: IncidentTelemetry.SourceName,
-        serviceVersion: "2.0.0"));
+        serviceVersion: "2.0.1"));
 var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
 telemetry.WithTracing(options =>
 {

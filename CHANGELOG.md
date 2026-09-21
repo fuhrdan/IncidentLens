@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.0.1 — CI and Repository Maintenance
+
+### Fixed
+- Aligned the deployment version test with the application release version.
+- Restored successful deployment validation in GitHub Actions.
+
+### Maintenance
+- Updated the application and telemetry versions to 2.0.1.
+- Excluded generated Python cache files and local debugging logs.
+- Removed a committed debugging log.
+- Updated release documentation.
+
+### Application behavior
+- No incident-management or dashboard behavior changes.
+
 ## v2.0.0 — Operations Command Center (implementation milestone 1)
 
 - New tenant-safe dashboard overview API, angular command-center route and initial KPI/incident panels.

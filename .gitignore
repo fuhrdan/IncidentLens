@@ -36,3 +36,6 @@ deploy/k8s/config.yaml
 # Python
 __pycache__/
 *.py[cod]
+
+# Local debugging and runtime logs
+*.log
