@@ -1,24 +1,44 @@
 # IncidentLens
 
-**IncidentLens** is a focused incident command center for operations and engineering teams. It brings active incidents, customer impact, ownership, state changes, and the response timeline into one readable workspace.
+**IncidentLens v2.0.1 — Operations Command Center**
 
-A full-stack incident management platform built with Angular 22, ASP.NET Core 10, and PostgreSQL.
+IncidentLens is a full-stack, self-hosted incident management platform
+for IT operations and engineering teams. It brings active incidents,
+service reliability, ownership, response activity, and postmortems
+into one operational workspace.
 
-Version 2.0.0 introduces a new operational dashboard with incident summaries, reliability metrics, active incident tracking, and a modern dark-themed command center.
+Built with Angular 22, ASP.NET Core 10, and PostgreSQL.
+
+Version 2.0 introduced the Operations Command Center dashboard,
+including incident summaries, reliability metrics, active incident
+tracking, and a modern dark-themed interface.
+
+Version 2.0.1 is a maintenance release focused on CI validation,
+documentation accuracy, and repository cleanup.
 
 ## Operations Command Center Preview
 
-![IncidentLens v2.0.0 Command Center](docs/images/incidentlens-v2-command-center.png)
+![IncidentLens Operations Command Center](docs/images/incidentlens-v2-command-center.png)
 
-
-**IncidentLens v2.0.0 — Operations Command Center**
-
-Version **1.0.0** adds browser authorization-code/PKCE login, release runbooks and repeatable release-readiness checks on the v0.9 hardening foundation. This is the GA **source candidate**; production deployment must pass the live identity, database, performance and recovery acceptance gates in `docs/RELEASE_ACCEPTANCE.md`.
-
-![Version](https://img.shields.io/badge/version-2.0.0-38bdf8)
+![Version](https://img.shields.io/badge/version-2.0.1-38bdf8)
 ![Angular](https://img.shields.io/badge/Angular-22-dd0031)
 ![.NET](https://img.shields.io/badge/.NET-10-512bd4)
 ![License](https://img.shields.io/badge/license-MIT-35d399)
+
+## v2.0.1 — CI and Repository Maintenance
+
+### Fixed
+- Corrected the deployment test to validate the backend telemetry
+  version against the application release version.
+- Restored successful deployment validation in GitHub Actions.
+
+### Maintenance
+- Excluded generated Python cache files and local debugging logs.
+- Removed a committed local debugging log.
+- Updated README release information and documentation.
+
+### Application behavior
+- No incident-management or dashboard behavior changes.
 
 ## What v1.0.0 includes
 
@@ -68,7 +88,18 @@ See [operator handbook](docs/OPERATOR_GUIDE.md), [administrator handbook](docs/A
 
 ## Release status
 
-This ZIP is the **v1.0.0 source candidate**, not a prebuilt or independently verified production deployment. Before production use, complete every applicable gate in [`docs/RELEASE_ACCEPTANCE.md`](docs/RELEASE_ACCEPTANCE.md): Angular and .NET builds/integration tests, real OIDC browser flow, TLS, tenant isolation, production-like PostgreSQL recovery, load tests and container security scans. The distributed-system architecture remains **one API instance**.
+IncidentLens v2.0.1 is a source release with a working local demo
+and a full-stack application intended for deployment after validation.
+
+The Angular demo runs independently. Production use requires a
+validated identity provider, PostgreSQL, HTTPS, tenant-isolation
+checks, backup and restore testing, and the applicable release
+acceptance checks.
+
+See [release acceptance](docs/RELEASE_ACCEPTANCE.md) and
+[deployment instructions](docs/DEPLOYMENT.md).
+
+The current reference deployment supports one API instance.
 
 ## Quick start: portfolio demo
 
