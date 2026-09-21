@@ -88,8 +88,9 @@ See [operator handbook](docs/OPERATOR_GUIDE.md), [administrator handbook](docs/A
 
 ## Release status
 
-IncidentLens v2.0.1 is a source release with a working local demo
+IncidentLens v2.0.1 is a source candidate with a working local demo
 and a full-stack application intended for deployment after validation.
+It is not yet a validated production deployment.
 
 The Angular demo runs independently. Production use requires a
 validated identity provider, PostgreSQL, HTTPS, tenant-isolation
