@@ -22,7 +22,7 @@
 
     <div class="sidebar-foot">
       <span class="api-state" [class.offline]="!store.liveConnected()"><i></i> {{ store.liveConnected() ? 'Live coordination active' : 'Realtime reconnecting' }}</span>
-      <span>IncidentLens v1.0.0</span>
+      <span>IncidentLens v2.0.0 · <a href="/">Command center</a></span>
       @if (!demoMode) { <button type="button" (click)="auth.logout()" aria-label="Sign out of IncidentLens">Sign out</button> }
     </div>
   </aside>

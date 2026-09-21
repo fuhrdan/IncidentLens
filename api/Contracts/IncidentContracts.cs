@@ -74,7 +74,6 @@ public sealed class IncidentQueryRequest
 {
     public int? Page { get; init; } = 1;
     public int? PageSize { get; init; } = 20;
-
     public string? Query { get; init; }
     public string? Severity { get; init; }
     public IncidentStatus? Status { get; init; }

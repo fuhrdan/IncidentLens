@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Data.Sqlite;
 
 namespace IncidentLens.Api.Tests;
 
@@ -29,29 +29,23 @@ public class ApiFactory : WebApplicationFactory<Program>
                 ["Authentication:Authority"] = string.Empty,
                 ["Retention:AllowPurge"] = "true",
                 ["Retention:MaxRowsPerRun"] = "100",
-		["RateLimiting:DemoAuthPerMinute"] = "10000",
+                ["RateLimiting:DemoAuthPerMinute"] = "10000",
             });
             configuration.AddInMemoryCollection(ConfigurationOverrides);
         });
     }
 
-protected override void Dispose(bool disposing)
-{
-    base.Dispose(disposing);
-
-    if (disposing)
+    protected override void Dispose(bool disposing)
     {
-        SqliteConnection.ClearAllPools();
-
-        foreach (var suffix in new[] { string.Empty, "-shm", "-wal" })
+        base.Dispose(disposing);
+        if (disposing)
         {
-            var path = databasePath + suffix;
-
-            if (File.Exists(path))
+            SqliteConnection.ClearAllPools();
+            foreach (var suffix in new[] { string.Empty, "-shm", "-wal" })
             {
-                File.Delete(path);
+                var path = databasePath + suffix;
+                if (File.Exists(path)) File.Delete(path);
             }
         }
     }
-}
 }

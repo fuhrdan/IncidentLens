@@ -14,49 +14,21 @@ public static class RequestLimits
 {
     public const string SectionName = "RateLimiting";
 
-public static IServiceCollection AddIncidentLensRateLimiting(
-    this IServiceCollection services,
-    IConfiguration configuration)
-{
-    return services.AddRateLimiter(options =>
+    public static IServiceCollection AddIncidentLensRateLimiting(
+        this IServiceCollection services, IConfiguration configuration)
     {
-        // No queuing: requests must not accumulate
-        // and exhaust a troubled API.
-        options.GlobalLimiter =
-            PartitionedRateLimiter.Create<HttpContext, string>(
-                context =>
-                {
-                    var currentConfiguration =
-                        context.RequestServices
-                            .GetRequiredService<IConfiguration>();
-
-                    var read = Limit(
-                        currentConfiguration,
-                        "ReadPerMinute", 600);
-
-                    var write = Limit(
-                        currentConfiguration,
-                        "WritePerMinute", 120);
-
-                    var anonymous = Limit(
-                        currentConfiguration,
-                        "AnonymousPerMinute", 60);
-
-                    var realtime = Limit(
-                        currentConfiguration,
-                        "RealtimeConnectPerMinute", 60);
-
-                    var login = Limit(
-                        currentConfiguration,
-                        "DemoAuthPerMinute", 10);
-
-                    var tenantClaim =
-                        currentConfiguration[
-                            "Authentication:TenantClaimType"]
-                        ?? "tenant_id";
-
-                    // Keep the existing partitioning code
-                    // beginning with:
+        return services.AddRateLimiter(options =>
+        {
+            // No queuing: requests must not accumulate and exhaust a troubled API.
+            options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            {
+                var runtime = context.RequestServices.GetRequiredService<IConfiguration>();
+                var read = Limit(runtime, "ReadPerMinute", 600);
+                var write = Limit(runtime, "WritePerMinute", 120);
+                var anonymous = Limit(runtime, "AnonymousPerMinute", 60);
+                var realtime = Limit(runtime, "RealtimeConnectPerMinute", 60);
+                var login = Limit(runtime, "DemoAuthPerMinute", 10);
+                var tenantClaim = runtime["Authentication:TenantClaimType"] ?? "tenant_id";
                 var path = context.Request.Path;
                 if (path.StartsWithSegments("/health"))
                     return RateLimitPartition.GetNoLimiter("health");

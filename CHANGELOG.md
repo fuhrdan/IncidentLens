@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.0.0 — Operations Command Center (implementation milestone 1)
+
+- New tenant-safe dashboard overview API, angular command-center route and initial KPI/incident panels.
+- Existing incident workflow preserved at /workspace; see docs/V2_DASHBOARD.md.
+- Reapplies fixes discovered during Windows .NET 10 build and test validation.
+
 ## v1.0.0 — general availability source candidate (2026-09-21)
 
 - Added production browser OIDC public SPA authorization-code + PKCE/S256 flow,

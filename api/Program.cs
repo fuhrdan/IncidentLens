@@ -8,6 +8,7 @@ using IncidentLens.Api.Realtime;
 using IncidentLens.Api.Services;
 using IncidentLens.Api.Security;
 using IncidentLens.Api.Hardening;
+using IncidentLens.Api.Features.Dashboard;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,6 +31,7 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<IncidentLensDbContext>(tags: ["ready"]);
 builder.Services.AddScoped<IncidentService>();
 builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<DashboardOverviewService>();
 builder.Services.AddScoped<PostmortemService>();
 builder.Services.AddScoped<EvidenceExportService>();
 builder.Services.AddScoped<ReliabilityAutomationService>();
@@ -127,7 +129,7 @@ builder.Services.AddCors(options => options.AddPolicy("IncidentLensWeb", policy 
 var telemetry = builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(
         serviceName: IncidentTelemetry.SourceName,
-        serviceVersion: "1.0.0"));
+        serviceVersion: "2.0.0"));
 var otlpEndpoint = builder.Configuration["OpenTelemetry:OtlpEndpoint"];
 telemetry.WithTracing(options =>
 {
@@ -206,6 +208,7 @@ app.MapClientAuthEndpoints();
 app.MapIncidentEndpoints();
 app.MapAlertEndpoints();
 app.MapAnalyticsEndpoints();
+app.MapDashboardEndpoints();
 app.MapPostmortemEndpoints();
 app.MapReliabilityEndpoints();
 app.MapRetentionEndpoints();

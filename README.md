@@ -2,9 +2,20 @@
 
 **IncidentLens** is a focused incident command center for operations and engineering teams. It brings active incidents, customer impact, ownership, state changes, and the response timeline into one readable workspace.
 
+A full-stack incident management platform built with Angular 22, ASP.NET Core 10, and PostgreSQL.
+
+Version 2.0.0 introduces a new operational dashboard with incident summaries, reliability metrics, active incident tracking, and a modern dark-themed command center.
+
+## Operations Command Center Preview
+
+![IncidentLens v2.0.0 Command Center](docs/images/incidentlens-v2-command-center.png)
+
+
+**IncidentLens v2.0.0 — Operations Command Center**
+
 Version **1.0.0** adds browser authorization-code/PKCE login, release runbooks and repeatable release-readiness checks on the v0.9 hardening foundation. This is the GA **source candidate**; production deployment must pass the live identity, database, performance and recovery acceptance gates in `docs/RELEASE_ACCEPTANCE.md`.
 
-![Version](https://img.shields.io/badge/version-1.0.0-38bdf8)
+![Version](https://img.shields.io/badge/version-2.0.0-38bdf8)
 ![Angular](https://img.shields.io/badge/Angular-22-dd0031)
 ![.NET](https://img.shields.io/badge/.NET-10-512bd4)
 ![License](https://img.shields.io/badge/license-MIT-35d399)

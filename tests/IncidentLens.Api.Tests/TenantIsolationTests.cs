@@ -183,6 +183,32 @@ public sealed class TenantIsolationTests(ApiFactory factory) : IClassFixture<Api
         await Assert.ThrowsAsync<InvalidOperationException>(() => database.SaveChangesAsync());
     }
 
+    [Fact]
+    public async Task Command_center_overview_is_tenant_scoped_and_reader_accessible()
+    {
+        using var alphaCommander = Authenticated("dashboard-alpha", "Commander");
+        using var alphaViewer = Authenticated("dashboard-alpha", "Viewer");
+        using var betaViewer = Authenticated("dashboard-beta", "Viewer");
+        var privateTitle = $"Dashboard private {Guid.NewGuid():N}";
+        var created = await alphaCommander.PostAsJsonAsync("/api/incidents", new
+        {
+            title = privateTitle, summary = "Confidential dashboard row",
+            severity = "SEV-1", service = "Dashboard Test",
+            ownerTeam = "Alpha", assignee = "Commander",
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var mine = await alphaViewer.GetFromJsonAsync<JsonElement>("/api/dashboard/overview?days=7");
+        var other = await betaViewer.GetFromJsonAsync<JsonElement>("/api/dashboard/overview?days=7");
+        Assert.True(mine.GetProperty("summary").GetProperty("activeIncidents").GetInt32() >= 1);
+        Assert.True(mine.GetProperty("summary").GetProperty("criticalIncidents").GetInt32() >= 1);
+        Assert.Contains(mine.GetProperty("activeIncidents").EnumerateArray(),
+            row => row.GetProperty("title").GetString() == privateTitle);
+        Assert.DoesNotContain(other.GetProperty("activeIncidents").EnumerateArray(),
+            row => row.GetProperty("title").GetString() == privateTitle);
+        Assert.Equal(HttpStatusCode.Unauthorized,
+            (await factory.CreateClient().GetAsync("/api/dashboard/overview")).StatusCode);
+    }
+
     private HttpClient Authenticated(string tenant, string role)
     {
         var client = factory.CreateClient();

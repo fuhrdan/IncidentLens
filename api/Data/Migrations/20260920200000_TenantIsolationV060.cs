@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace IncidentLens.Api.Data.Migrations;
 
 /// <summary>Preserves all existing rows under the explicitly documented legacy demo tenant.</summary>
-/// [DbContext(typeof(IncidentLensDbContext))]
-/// [Migration("20260920200000_TenantIsolationV060")]
 public partial class TenantIsolationV060 : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)

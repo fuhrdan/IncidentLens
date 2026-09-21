@@ -1,0 +1,81 @@
+<div class="console-shell">
+  <aside class="rail" aria-label="Main navigation">
+    <a routerLink="/" class="brand" aria-label="IncidentLens command center">
+      <span class="brand-symbol" aria-hidden="true">◩</span>
+      <span>Incident<span>Lens</span><small>See. Respond. Resolve.</small></span>
+    </a>
+    <nav>
+      <a routerLink="/" class="nav-link selected" aria-current="page"><span aria-hidden="true">▦</span>Dashboard</a>
+      <a routerLink="/workspace" fragment="incidents" class="nav-link"><span aria-hidden="true">⚑</span>Incidents</a>
+      <a routerLink="/workspace" fragment="automation" class="nav-link"><span aria-hidden="true">⌁</span>Reliability</a>
+      <a routerLink="/workspace" fragment="services" class="nav-link"><span aria-hidden="true">▥</span>Services</a>
+      <a routerLink="/workspace" fragment="analytics" class="nav-link"><span aria-hidden="true">▤</span>Analytics</a>
+      <a routerLink="/workspace" class="nav-link"><span aria-hidden="true">⚙</span>Incident workspace</a>
+    </nav>
+    <div class="rail-bottom"><span class="online-dot"></span>{{ environmentLabel }} environment <small>IncidentLens v2.0.0</small></div>
+  </aside>
+
+  <div class="main-column">
+    <header class="topbar">
+      <label class="global-search"><span aria-hidden="true">⌕</span><span class="sr-only">Search the displayed incident rows</span>
+        <input type="search" [value]="search()" (input)="updateSearch($event)" placeholder="Search incidents, services, or teams…" />
+      </label>
+      <div class="topbar-right"><span class="env"><span class="online-dot"></span>{{ environmentLabel }}</span>
+        <a routerLink="/workspace" class="top-link">Open workspace ↗</a>
+        @if (!demoMode) { <button type="button" class="signout" (click)="auth.logout()">Sign out</button> }
+      </div>
+    </header>
+
+    <main class="canvas">
+      <div class="page-top"><div><p class="eyebrow">OPERATIONS COMMAND CENTER</p><h1>Good to have you on watch.</h1><p>One view of your incident response. Every number comes from IncidentLens.</p></div>
+        <div class="page-actions"><button type="button" class="ghost-button" (click)="refresh()">↻ Refresh</button>
+          <a routerLink="/workspace" class="action-button">＋ Declare incident</a></div>
+      </div>
+
+      @if (error()) { <p class="error" role="alert">{{ error() }}</p> }
+      @if (loading() && !overview()) { <p class="loading" role="status">Loading tenant-scoped incident data…</p> }
+      @if (overview(); as data) {
+        <div class="snapshot-label"><span class="online-dot"></span>Operations overview <span class="muted">· updated {{ data.generatedAt | date:'shortTime' }} · auto-refreshes every 30s</span></div>
+        <section class="kpis" aria-label="Operations metrics">
+          <article class="kpi"><span class="kpi-icon critical">!</span><div><span>Active incidents</span><strong>{{ data.summary.activeIncidents }}</strong><small>Across your organization</small></div></article>
+          <article class="kpi"><span class="kpi-icon critical">♨</span><div><span>Critical incidents</span><strong>{{ data.summary.criticalIncidents }}</strong><small>SEV-1 · unresolved</small></div></article>
+          <article class="kpi"><span class="kpi-icon blue">◷</span><div><span>MTTA</span><strong>@if (data.summary.mttaMinutes !== null) { {{ data.summary.mttaMinutes | number:'1.0-1' }}m } @else { — }</strong><small>Past {{ data.windowDays }} days</small></div></article>
+          <article class="kpi"><span class="kpi-icon blue">◴</span><div><span>MTTR</span><strong>@if (data.summary.mttrMinutes !== null) { {{ data.summary.mttrMinutes | number:'1.0-1' }}m } @else { — }</strong><small>Past {{ data.windowDays }} days</small></div></article>
+          <article class="kpi"><span class="kpi-icon amber">⌁</span><div><span>Services at risk</span><strong>{{ data.summary.servicesAtRisk }}</strong><small>Outside healthy SLO state</small></div></article>
+        </section>
+
+        <div class="dashboard-grid">
+          <section class="panel incidents-panel" aria-labelledby="active-title">
+            <header class="panel-header"><div><span class="panel-symbol coral">◎</span><h2 id="active-title">Active incidents</h2><span class="panel-count">{{ data.summary.activeIncidents }} total</span></div>
+              <a routerLink="/workspace" fragment="incidents">Open queue →</a></header>
+            <div class="table-scroll"><table><thead><tr><th>ID</th><th>Title / service</th><th>Severity</th><th>Owner team</th><th>Status</th><th>Responders</th><th>Elapsed</th></tr></thead>
+              <tbody>
+                @for (incident of visibleIncidents(); track incident.id) {
+                  <tr><td class="id-cell"><a routerLink="/workspace" fragment="incidents">{{ incident.id }}</a></td>
+                    <td><strong>{{ incident.title }}</strong><small>{{ incident.service }}</small></td>
+                    <td><span class="severity" [class]="incident.severity.toLowerCase()">{{ incident.severity }}</span></td>
+                    <td>{{ incident.ownerTeam }}</td><td><span class="status" [class]="incident.status.toLowerCase()"><i></i>{{ incident.status }}</span></td>
+                    <td>{{ incident.responderCount }}</td><td class="elapsed">{{ duration(incident.declaredAt) }}</td></tr>
+                } @empty { <tr><td colspan="7" class="empty">{{ search() ? 'No displayed incidents match your search.' : 'No active incidents. All clear.' }}</td></tr> }
+              </tbody></table></div>
+            <footer class="panel-footer">Showing up to 12 newest unresolved incidents. <a routerLink="/workspace">Use the workspace for the full queue →</a></footer>
+          </section>
+
+          <aside class="insight-column">
+            <section class="panel focus-panel" aria-labelledby="focus-title"><header class="panel-header"><div><span class="panel-symbol amber">⚡</span><h2 id="focus-title">Operational pulse</h2></div></header>
+              <div class="focus-content"><p class="big-label">Critical attention</p><strong class="big-number">{{ data.summary.criticalIncidents }}</strong><p>{{ data.summary.criticalIncidents === 1 ? 'unresolved SEV-1 incident' : 'unresolved SEV-1 incidents' }}</p>
+                <div class="focus-split"><div><span>Open overall</span><b>{{ data.summary.activeIncidents }}</b></div><div><span>SLO risk</span><b>{{ data.summary.servicesAtRisk }}</b></div></div>
+                <a routerLink="/workspace" fragment="automation">Review reliability signals →</a></div>
+            </section>
+            <section class="panel recent-panel" aria-labelledby="recent-title"><header class="panel-header"><div><span class="panel-symbol blue">◷</span><h2 id="recent-title">Recent declarations</h2></div></header>
+              <ul class="declarations">@for (incident of data.activeIncidents.slice(0, 5); track incident.id) {
+                <li><span class="activity-mark" [class]="incident.severity.toLowerCase()">!</span><div><b>{{ incident.id }} · {{ incident.title }}</b><small>{{ incident.ownerTeam }} · {{ incident.declaredAt | date:'MMM d, h:mm a' }}</small></div></li>
+              } @empty { <li class="empty">No active incident declarations.</li> }</ul>
+              <footer class="panel-footer">Incident declarations only. Full event timeline is in the workspace.</footer>
+            </section>
+          </aside>
+        </div>
+      }
+    </main>
+  </div>
+</div>
