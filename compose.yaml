@@ -1,0 +1,80 @@
+# Real deployment only: no Development JWT issuer, seed data, or public DB port.
+# Set POSTGRES_PASSWORD, OIDC_AUTHORITY, OIDC_AUDIENCE in .env (never commit it).
+name: incidentlens
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: incidentlens
+      POSTGRES_USER: incidentlens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - incidentlens-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U incidentlens -d incidentlens"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+    networks: [internal]
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    image: incidentlens-api:1.0.0
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      Database__Provider: PostgreSql
+      ConnectionStrings__PostgreSql: "Host=postgres;Port=5432;Database=incidentlens;Username=incidentlens;Password=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+      Authentication__Authority: ${OIDC_AUTHORITY:?Set OIDC_AUTHORITY in .env}
+      Authentication__Audience: ${OIDC_AUDIENCE:?Set OIDC_AUDIENCE in .env}
+      Authentication__ClientId: ${OIDC_CLIENT_ID:?Set OIDC_CLIENT_ID in .env}
+      Authentication__Scope: ${OIDC_SCOPE:-openid profile}
+      Authentication__TenantClaimType: ${TENANT_CLAIM_TYPE:-tenant_id}
+      Authentication__RoleClaimType: ${ROLE_CLAIM_TYPE:-http://schemas.microsoft.com/ws/2008/06/identity/claims/role}
+      ReverseProxy__RedirectToHttps: "false"
+      Retention__AllowPurge: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+      start_period: 120s
+    networks: [internal]
+
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    image: incidentlens-web:1.0.0
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    networks: [internal]
+
+  edge:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/nginx/edge.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./deploy/certs:/etc/incidentlens/tls:ro
+    depends_on:
+      - web
+    networks: [internal]
+
+volumes:
+  incidentlens-postgres:
+
+networks:
+  internal:
+    driver: bridge

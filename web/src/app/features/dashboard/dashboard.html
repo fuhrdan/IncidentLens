@@ -1,0 +1,338 @@
+<div class="app-shell">
+  <aside class="sidebar" aria-label="Primary navigation">
+    <a class="brand" href="/" aria-label="IncidentLens home">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span>Incident<span>Lens</span></span>
+    </a>
+
+    <nav>
+      <a class="nav-item active" href="#incidents" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.8 2.6 17.1A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.9L13.7 3.8a2 2 0 0 0-3.4 0Z"/></svg>
+        Incidents <span class="nav-count">{{ store.metrics().active }}</span>
+      </a>
+      <a class="nav-item" href="#services">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M9 18h6"/></svg>
+        Services
+      </a>
+      <a class="nav-item" href="#analytics">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10m6 10V4m6 16v-7m4 7H2"/></svg>
+        Analytics
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="api-state" [class.offline]="!store.liveConnected()"><i></i> {{ store.liveConnected() ? 'Live coordination active' : 'Realtime reconnecting' }}</span>
+      <span>IncidentLens v1.0.0</span>
+      @if (!demoMode) { <button type="button" (click)="auth.logout()" aria-label="Sign out of IncidentLens">Sign out</button> }
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="mobile-brand">
+        <span class="brand-mark" aria-hidden="true"><span></span></span> IncidentLens
+      </div>
+      <div class="env-pill"><i></i> Production</div>
+      <div class="topbar-actions">
+        <button class="icon-button" type="button" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+          <span></span>
+        </button>
+        <div class="user"><span>DF</span><div><strong>Dan Fuhr</strong><small>Incident commander</small></div></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">OPERATIONS OVERVIEW</p>
+          <h1>Incident command</h1>
+          <p>See impact, coordinate response, and keep a reliable operational record.</p>
+        </div>
+        <button class="primary-button" type="button" (click)="openCreateDialog()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Declare incident
+        </button>
+      </section>
+
+      @if (store.error()) {
+        <div class="error-banner" role="alert">{{ store.error() }}</div>
+      }
+
+      <section class="metrics" aria-label="Incident metrics">
+        <article>
+          <div class="metric-icon danger"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8v4m0 4h.01M4.9 19h14.2a2 2 0 0 0 1.7-3L13.7 4a2 2 0 0 0-3.4 0L3.2 16a2 2 0 0 0 1.7 3Z"/></svg></div>
+          <div><span>Active incidents</span><strong>{{ store.metrics().active }}</strong><small><b>2</b> require action</small></div>
+        </article>
+        <article>
+          <div class="metric-icon critical"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20Zm0-14v5m0 3h.01"/></svg></div>
+          <div><span>Critical impact</span><strong>{{ store.metrics().critical }}</strong><small>SEV-1 incident</small></div>
+        </article>
+        <article>
+          <div class="metric-icon watch"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg></div>
+          <div><span>Monitoring</span><strong>{{ store.metrics().monitoring }}</strong><small>Pending confirmation</small></div>
+        </article>
+        <article>
+          <div class="metric-icon good"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg></div>
+          <div><span>Mean time to ack</span><strong>{{ store.metrics().meanTimeToAcknowledgeMinutes }}m</strong><small><b>↓ 18%</b> this week</small></div>
+        </article>
+      </section>
+
+      <section class="analytics-panel" id="analytics" aria-labelledby="analytics-heading">
+        <div class="analytics-heading">
+          <div><p class="eyebrow">30-DAY RELIABILITY</p><h2 id="analytics-heading">Operational intelligence</h2></div>
+          @if (store.analytics(); as overview) { <span>Updated {{ overview.generatedAt | date:'shortTime':'UTC' }} UTC</span> }
+        </div>
+        @if (store.analytics(); as overview) {
+          <div class="reliability-metrics">
+            <div><span>Mean time to acknowledge</span><strong>{{ overview.metrics.meanTimeToAcknowledgeMinutes }}m</strong></div>
+            <div><span>Mean time to resolve</span><strong>{{ overview.metrics.meanTimeToResolveMinutes }}m</strong></div>
+            <div><span>Recurrence rate</span><strong>{{ overview.metrics.recurrenceRatePercent }}%</strong></div>
+            <div><span>Customer-impact minutes</span><strong>{{ overview.metrics.customerImpactMinutes | number }}</strong></div>
+          </div>
+          <div class="service-health" id="services">
+            @for (service of overview.services; track service.service) {
+              <article>
+                <div class="service-heading"><div><strong>{{ service.service }}</strong><span class="health-chip" [class]="service.health.toLowerCase().replace(' ', '-')">{{ service.health }}</span></div><small>{{ service.currentAvailabilityPercent }}% / {{ service.availabilityTargetPercent }}% SLO</small></div>
+                <div class="trend-bars" aria-label="Seven day availability trend">
+                  @for (point of service.trend; track point.capturedAt) { <i [style.height.%]="(point.availabilityPercent - 99.7) * 300 + 10" [title]="point.availabilityPercent + '%'"></i> }
+                </div>
+                <div class="service-stats"><span><b>{{ service.errorBudgetConsumedPercent }}%</b> budget used</span><span><b>{{ service.sloBreaches }}</b> breach</span><span><b>{{ service.affectedCustomers | number }}</b> customers</span></div>
+              </article>
+            }
+          </div>
+        } @else {
+          <div class="analytics-skeleton">Correlating incidents, SLOs, and service health…</div>
+        }
+      </section>
+
+      <section class="automation-center" id="automation" aria-labelledby="automation-heading">
+        <div class="automation-heading">
+          <div><p class="eyebrow">PROACTIVE OPERATIONS</p><h2 id="automation-heading">Reliability signal center</h2><p>Evaluate SLO burn, suppress planned work, and promote confirmed risk into incident response.</p></div>
+          <button type="button" class="evaluate-button" (click)="store.evaluateReliability()" [disabled]="store.saving()">Evaluate now</button>
+        </div>
+        <div class="automation-grid">
+          <div class="signal-inbox">
+            <div class="automation-title"><h3>Signal inbox</h3><span>{{ store.reliabilitySignals().length }} signals</span></div>
+            @for (signal of store.reliabilitySignals(); track signal.id) {
+              <article class="signal-card" [class.suppressed]="signal.status === 'Suppressed'">
+                <div class="signal-top"><span class="severity-label" [class]="signal.suggestedSeverity.toLowerCase()">{{ signal.suggestedSeverity }}</span><span class="signal-status" [class]="signal.status.toLowerCase()">{{ signal.status }}</span><small>{{ signal.evaluationWindowMinutes }}m window</small></div>
+                <strong>{{ signal.service }}</strong><p>{{ signal.summary }}</p>
+                <div class="burn-meter"><i [style.width.%]="signal.burnRate > 30 ? 100 : signal.burnRate / 30 * 100"></i></div>
+                <div class="signal-stats"><span><b>{{ signal.burnRate }}×</b> burn rate</span><span><b>{{ signal.observedAvailabilityPercent }}%</b> observed</span><span><b>{{ signal.targetAvailabilityPercent }}%</b> target</span></div>
+                @if (signal.suppressionReason) { <div class="suppression-note">{{ signal.suppressionReason }}</div> }
+                @if (signal.incidentId) { <div class="linked-incident">Promoted to {{ signal.incidentId }}</div> }
+                @if (signal.status === 'Open' || signal.status === 'Acknowledged') {
+                  <div class="signal-actions">@if (signal.status === 'Open') { <button type="button" (click)="store.acknowledgeSignal(signal)" [disabled]="store.saving()">Acknowledge</button> }<button type="button" class="promote" (click)="store.promoteSignal(signal)" [disabled]="store.saving()">Promote to incident</button></div>
+                }
+              </article>
+            } @empty { <div class="empty-signals">No reliability signals. Run an evaluation to inspect current SLO burn.</div> }
+          </div>
+          <div class="automation-config">
+            <div class="automation-title"><h3>Service objectives</h3><span>Version controlled</span></div>
+            <div class="objective-list">
+              @for (objective of store.objectives(); track objective.id) {
+                <button type="button" class="objective-card" (click)="editObjective(objective)">
+                  <span><strong>{{ objective.service }}</strong><small>{{ objective.ownerTeam }}</small></span><span><b>{{ objective.availabilityTargetPercent }}%</b><small>{{ objective.fastBurnThreshold }}× / {{ objective.slowBurnThreshold }}× burn</small></span><i [class.disabled]="!objective.enabled"></i>
+                </button>
+              }
+            </div>
+            <div class="automation-title maintenance-title"><h3>Maintenance windows</h3><span>{{ store.maintenanceWindows().length }} scheduled</span></div>
+            @for (window of store.maintenanceWindows(); track window.id) {
+              <div class="maintenance-item"><span><strong>{{ window.title }}</strong><small>{{ window.service }} · {{ window.startsAt | date:'MMM d, h:mm a':'UTC' }}–{{ window.endsAt | date:'shortTime':'UTC' }} UTC</small></span><span [class.active]="window.active">{{ window.active ? 'Active' : 'Scheduled' }}</span><button type="button" aria-label="Delete maintenance window" (click)="store.deleteMaintenanceWindow(window)">×</button></div>
+            }
+            <form class="maintenance-form" [formGroup]="maintenanceForm" (ngSubmit)="createMaintenanceWindow()">
+              <label>Service<select formControlName="service"><option value="">Select service</option>@for (objective of store.objectives(); track objective.id) { <option [value]="objective.service">{{ objective.service }}</option> }</select></label>
+              <label>Title<input formControlName="title" placeholder="Planned change"></label>
+              <label>Starts<input type="datetime-local" formControlName="startsAt"></label><label>Ends<input type="datetime-local" formControlName="endsAt"></label>
+              <button type="submit" [disabled]="maintenanceForm.invalid || store.saving()">Schedule window</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="workspace" id="incidents">
+        <div class="queue-panel">
+          <div class="panel-heading">
+            <div><h2>Incident queue</h2><span>{{ store.total() }} results</span></div>
+            <form class="filters" [formGroup]="filters">
+              <label class="search-field">
+                <span class="sr-only">Search incidents</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+                <input type="search" formControlName="query" placeholder="Search incidents">
+              </label>
+              <label>
+                <span class="sr-only">Filter by severity</span>
+                <select formControlName="severity">
+                  <option value="All">All severity</option>
+                  @for (severity of severities; track severity) { <option [value]="severity">{{ severity }}</option> }
+                </select>
+              </label>
+              <label class="team-filter"><span class="sr-only">Filter by owning team</span><input type="search" formControlName="ownerTeam" placeholder="Owning team"></label>
+              <label>
+                <span class="sr-only">Filter by status</span>
+                <select formControlName="status">
+                  <option value="All">All status</option>
+                  @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+                </select>
+              </label>
+            </form>
+          </div>
+
+          <div class="incident-list" aria-live="polite">
+            @if (store.loading()) {
+              @for (item of [1, 2, 3]; track item) { <div class="skeleton"></div> }
+            } @else {
+              @for (incident of store.incidents(); track incident.id) {
+                <button type="button" class="incident-row" [class.selected]="store.selectedId() === incident.id" (click)="selectIncident(incident.id)">
+                  <span class="severity-dot" [class]="incident.severity.toLowerCase()"></span>
+                  <span class="incident-main">
+                    <span class="incident-title"><strong>{{ incident.title }}</strong><small>{{ incident.id }}</small></span>
+                    <span class="incident-meta"><span>{{ incident.service }}</span><span>{{ incident.assignee }}</span><span>{{ incident.updatedAt | date:'shortTime' }}</span></span>
+                  </span>
+                  <span class="status-badge" [class]="incident.status.toLowerCase()">{{ incident.status }}</span>
+                </button>
+              } @empty {
+                <div class="empty-state"><strong>No incidents found</strong><span>Try removing one or more filters.</span></div>
+              }
+            }
+          </div>
+          <div class="queue-pagination" aria-label="Incident queue pages"><button type="button" (click)="store.previousPage()" [disabled]="store.page() <= 1">Previous</button>
+            <span>Page {{ store.page() }} of {{ store.totalPages() || 1 }}</span><button type="button" (click)="store.nextPage()" [disabled]="store.page() >= store.totalPages()">Next</button></div>
+        </div>
+
+        <aside class="detail-panel" aria-label="Incident details">
+          @if (store.selected(); as incident) {
+            <div class="detail-heading">
+              <div><span class="severity-label" [class]="incident.severity.toLowerCase()">{{ incident.severity }}</span><span class="incident-id">{{ incident.id }} · v{{ incident.version }}</span></div>
+              <h2>{{ incident.title }}</h2>
+              <p>{{ incident.summary }}</p>
+            </div>
+
+            <dl class="detail-grid">
+              <div><dt>Status</dt><dd><select [value]="incident.status" (change)="updateStatus($event)" [disabled]="store.saving()">@for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }</select></dd></div>
+              <div><dt>Service</dt><dd>{{ incident.service }}</dd></div>
+              <div><dt>Incident commander</dt><dd><span class="avatar">{{ initials(incident.assignee) }}</span>{{ incident.assignee }}</dd></div>
+              <div><dt>Owning team</dt><dd>{{ incident.ownerTeam }}</dd></div>
+              <div><dt>Customers affected</dt><dd>{{ incident.affectedCustomers | number }}</dd></div>
+              <div><dt>Last updated</dt><dd>{{ incident.updatedAt | date:'MMM d, h:mm a':'UTC' }} UTC</dd></div>
+            </dl>
+            <section class="presence-strip" aria-label="Operators viewing this incident"><div><span class="live-dot" [class.offline]="!store.liveConnected()"></span><strong>Live room</strong><small>{{ store.presence().length }} viewing</small></div>
+              <div class="presence-avatars">@for (operator of store.presence(); track operator.connectionId) { <span class="presence-avatar" [title]="operator.name + ' · ' + operator.role">{{ initials(operator.name) }}</span> }</div></section>
+
+            <section class="team-section" aria-labelledby="team-heading">
+              <div class="team-title"><h3 id="team-heading">Response team</h3><span>{{ incident.responders.length }} active</span></div>
+              <div class="responder-list">
+                @for (responder of incident.responders; track responder.id) {
+                  <div class="responder">
+                    <span class="avatar">{{ initials(responder.name) }}</span>
+                    <span><strong>{{ responder.name }}</strong><small>{{ responder.role }}</small></span>
+                    @if (responder.name !== incident.assignee) {
+                      <button type="button" aria-label="Remove responder" (click)="removeResponder(responder.id)" [disabled]="store.saving()">×</button>
+                    }
+                  </div>
+                }
+              </div>
+              <form class="team-form assignment-form" [formGroup]="assignmentForm" (ngSubmit)="updateAssignment()">
+                <label for="new-assignee">Transfer command</label>
+                <div><input id="new-assignee" formControlName="assignee" [placeholder]="incident.assignee"><button type="submit" [disabled]="assignmentForm.invalid || store.saving()">Assign</button></div>
+              </form>
+              <form class="team-form responder-form" [formGroup]="responderForm" (ngSubmit)="addResponder()">
+                <label for="responder-name">Add responder</label>
+                <div><input id="responder-name" formControlName="name" placeholder="Name"><input formControlName="role" placeholder="Role"><button type="submit" [disabled]="responderForm.invalid || store.saving()">Add</button></div>
+              </form>
+              <div class="tag-list" aria-label="Incident tags">
+                @for (tag of incident.tags; track tag) { <span>{{ tag }}</span> }
+                @empty { <small>No tags</small> }
+              </div>
+              <form class="team-form tag-form" [formGroup]="tagsForm" (ngSubmit)="updateTags()">
+                <label for="incident-tags">Edit tags</label>
+                <div><input id="incident-tags" formControlName="tags" [placeholder]="incident.tags.join(', ') || 'comma, separated'"><button type="submit" [disabled]="tagsForm.invalid || store.saving()">Save</button></div>
+              </form>
+            </section>
+
+            <details class="postmortem-panel" open>
+              <summary><span><strong>Postmortem</strong><small>Root cause, learnings, and accountable follow-up</small></span><span>{{ store.postmortem()?.status ?? 'Not started' }}</span></summary>
+              <div class="postmortem-body">
+                <div class="evidence-actions"><span>{{ store.postmortem() ? 'Evidence package includes the audit trail and action items.' : 'Capture the learning record while context is fresh.' }}</span><div><button type="button" (click)="store.exportEvidence('json')">Export JSON</button><button type="button" (click)="store.exportEvidence('csv')">Export CSV</button></div></div>
+                <form class="postmortem-form" [formGroup]="postmortemForm" (ngSubmit)="savePostmortem()">
+                  <div class="postmortem-row"><label>Owner<input formControlName="owner" placeholder="Accountable owner"></label><label>Status<select formControlName="status"><option value="Draft">Draft</option><option value="InReview">In review</option><option value="Published">Published</option></select></label></div>
+                  <label>Executive summary<textarea formControlName="executiveSummary" rows="2" placeholder="What happened and what was the impact?"></textarea></label>
+                  <label>Root cause<textarea formControlName="rootCause" rows="2" placeholder="Why did the system fail?"></textarea></label>
+                  <div class="postmortem-row"><label>Detection<textarea formControlName="detection" rows="2" placeholder="How was it detected?"></textarea></label><label>Resolution<textarea formControlName="resolution" rows="2" placeholder="How was service restored?"></textarea></label></div>
+                  <label>Lessons learned<textarea formControlName="lessonsLearned" rows="2" placeholder="What will change?"></textarea></label>
+                  <button class="save-postmortem" type="submit" [disabled]="postmortemForm.invalid || store.saving()">{{ store.postmortem() ? 'Save postmortem' : 'Create postmortem' }}</button>
+                </form>
+                @if (store.postmortem(); as postmortem) {
+                  <section class="action-items"><div class="team-title"><h3>Action items</h3><span>{{ postmortem.actionItems.length }} tracked</span></div>
+                    @for (action of postmortem.actionItems; track action.id) {
+                      <div class="action-item"><span><strong>{{ action.title }}</strong><small>{{ action.owner }} · due {{ action.dueAt | date:'MMM d':'UTC' }}</small></span><select [value]="action.status" (change)="updateActionStatus(action.id,$event,action.owner,action.dueAt)" [disabled]="store.saving()"><option value="Open">Open</option><option value="InProgress">In progress</option><option value="Done">Done</option></select></div>
+                    } @empty { <p class="empty-actions">No action items yet.</p> }
+                    <form class="action-form" [formGroup]="actionForm" (ngSubmit)="addActionItem()"><input formControlName="title" placeholder="Follow-up action"><input formControlName="owner" placeholder="Owner"><input type="date" formControlName="dueAt"><button type="submit" [disabled]="actionForm.invalid || store.saving()">Add</button></form>
+                  </section>
+                }
+              </div>
+            </details>
+
+            <div class="timeline-heading"><h3>Response timeline</h3><span>{{ incident.timeline.length }} updates</span></div>
+            <ol class="timeline">
+              @for (event of incident.timeline; track event.id) {
+                <li>
+                  <span class="event-mark" [class]="event.type"><i></i></span>
+                  <div>@if (event.command) { <span class="command-pill">/{{ event.command.name }}</span> }<p>{{ event.message }}</p>
+                    @if (event.mentions?.length) { <div class="mention-list">@for (mention of event.mentions; track mention) { <span>&#64;{{ mention }}</span> }</div> }
+                    <span>{{ event.actor }} · {{ event.occurredAt | date:'MMM d, h:mm a':'UTC' }} UTC</span></div>
+                </li>
+              }
+            </ol>
+
+            <form class="note-form" [formGroup]="noteForm" (ngSubmit)="addNote()">
+              <div class="composer-heading"><label for="incident-note">Timeline composer</label><span>Mentions and commands supported</span></div>
+              <div class="command-shortcuts"><button type="button" (click)="insertCommand('/status Monitoring')">/status</button><button type="button" (click)="insertCommand('/assign ')">/assign</button><button type="button" (click)="insertCommand('/note ')">/note</button></div>
+              <div><input id="incident-note" formControlName="note" placeholder="Update the team, mention @Maya, or run /status Monitoring" autocomplete="off"><button type="submit" [disabled]="noteForm.invalid || store.saving()">Send update</button></div>
+            </form>
+          } @else {
+            <div class="empty-detail"><span>◎</span><strong>Select an incident</strong><p>Choose an item from the queue to inspect its response record.</p></div>
+          }
+        </aside>
+      </section>
+    </div>
+  </main>
+</div>
+
+<dialog #incidentDialog class="incident-dialog" (cancel)="closeCreateDialog()">
+  <form [formGroup]="createForm" (ngSubmit)="createIncident()">
+    <div class="dialog-heading">
+      <div><span class="dialog-icon">!</span><div><p>NEW INCIDENT</p><h2>Declare an incident</h2></div></div>
+      <button type="button" aria-label="Close dialog" (click)="closeCreateDialog()">×</button>
+    </div>
+    <p class="dialog-intro">Start a coordinated response and create the first entry in the operational timeline.</p>
+
+    <label>Title <span>*</span><input formControlName="title" placeholder="Briefly describe the impact" autofocus></label>
+    @if (createForm.controls.title.touched && createForm.controls.title.invalid) { <small class="field-error">A title is required.</small> }
+    <label>Summary <span>*</span><textarea formControlName="summary" rows="3" placeholder="What is happening, and who is affected?"></textarea></label>
+    <div class="form-row">
+      <label>Severity <span>*</span><select formControlName="severity">@for (severity of severities; track severity) { <option [value]="severity">{{ severity }}</option> }</select></label>
+      <label>Service <span>*</span><input formControlName="service" placeholder="e.g. Payments API"></label>
+    </div>
+    <label>Owning team <span>*</span><input formControlName="ownerTeam" placeholder="e.g. Payments Platform"></label>
+    <label>Incident commander <span>*</span><input formControlName="assignee" placeholder="Name of the response owner"></label>
+
+    <div class="dialog-actions"><button type="button" class="secondary-button" (click)="closeCreateDialog()">Cancel</button><button type="submit" class="primary-button" [disabled]="store.saving()">{{ store.saving() ? 'Declaring…' : 'Declare incident' }}</button></div>
+  </form>
+</dialog>
+
+<dialog #objectiveDialog class="incident-dialog objective-dialog" (cancel)="closeObjectiveDialog()">
+  @if (editingObjective; as objective) {
+    <form [formGroup]="objectiveForm" (ngSubmit)="saveObjective()">
+      <div class="dialog-heading"><div><span class="dialog-icon">S</span><div><p>SERVICE OBJECTIVE</p><h2>{{ objective.service }}</h2></div></div><button type="button" aria-label="Close dialog" (click)="closeObjectiveDialog()">×</button></div>
+      <p class="dialog-intro">Tune ownership, response targets, and multi-window burn thresholds. Version {{ objective.version }} is currently active.</p>
+      <label>Owning team <span>*</span><input formControlName="ownerTeam"></label>
+      <div class="form-row"><label>Availability target (%) <input type="number" step="0.001" formControlName="availabilityTargetPercent"></label><label>Monthly error budget (minutes) <input type="number" formControlName="monthlyErrorBudgetMinutes"></label></div>
+      <div class="form-row"><label>Acknowledge target (minutes) <input type="number" formControlName="acknowledgementTargetMinutes"></label><label>Resolution target (minutes) <input type="number" formControlName="resolutionTargetMinutes"></label></div>
+      <div class="form-row"><label>Fast burn threshold <input type="number" step="0.1" formControlName="fastBurnThreshold"></label><label>Slow burn threshold <input type="number" step="0.1" formControlName="slowBurnThreshold"></label></div>
+      <label class="toggle-field"><input type="checkbox" formControlName="enabled"> Enable automated evaluation</label>
+      <div class="dialog-actions"><button type="button" class="secondary-button" (click)="closeObjectiveDialog()">Cancel</button><button type="submit" class="primary-button" [disabled]="objectiveForm.invalid || store.saving()">Save objective</button></div>
+    </form>
+  }
+</dialog>

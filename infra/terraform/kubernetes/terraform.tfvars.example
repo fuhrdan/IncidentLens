@@ -1,0 +1,8 @@
+hostname = "incidentlens.example.com"
+oidc_authority = "https://id.example.com/realms/incidentlens"
+oidc_audience = "incidentlens-api"
+api_image = "ghcr.io/REPLACE_ME/incidentlens-api:1.0.0"
+web_image = "ghcr.io/REPLACE_ME/incidentlens-web:1.0.0"
+
+oidc_client_id = "incidentlens-spa"
+oidc_scope = "openid profile"

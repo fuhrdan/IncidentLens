@@ -1,0 +1,34 @@
+# Frontend
+web/node_modules/
+web/dist/
+web/.angular/
+
+# Backend
+**/bin/
+**/obj/
+api/*.db
+api/*.db-shm
+api/*.db-wal
+
+# Editors and operating systems
+.idea/
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
+
+# Local configuration and secrets
+.env
+.env.*
+!*.example
+appsettings.Local.json
+
+# Generated TLS material and local deployment config
+deploy/certs/
+deploy/k8s/config.yaml
+*.tfstate
+*.tfstate.*
+.terraform/
+*.tfvars
+!*.tfvars.example

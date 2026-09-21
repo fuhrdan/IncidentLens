@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: incidentlens
+spec:
+  # Outbox is not distributed-leased. Keep EXACTLY ONE API instance.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: incidentlens-api }
+  template:
+    metadata:
+      labels: { app: incidentlens-api }
+    spec:
+      terminationGracePeriodSeconds: 45
+      containers:
+        - name: api
+          image: ghcr.io/REPLACE_ME/incidentlens-api:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - { name: http, containerPort: 8080 }
+          env:
+            - { name: ASPNETCORE_ENVIRONMENT, value: Production }
+            - { name: ASPNETCORE_URLS, value: 'http://+:8080' }
+            - { name: Database__Provider, value: PostgreSql }
+            - { name: ReverseProxy__RedirectToHttps, value: 'false' }
+            - { name: Retention__AllowPurge, value: 'false' }
+            - name: Authentication__RoleClaimType
+              valueFrom: { configMapKeyRef: { name: incidentlens-config, key: role-claim-type } }
+            - name: ConnectionStrings__PostgreSql
+              valueFrom: { secretKeyRef: { name: incidentlens-secrets, key: postgres-connection } }
+            - name: Authentication__Authority
+              valueFrom: { configMapKeyRef: { name: incidentlens-config, key: oidc-authority } }
+            - name: Authentication__ClientId
+              valueFrom: { configMapKeyRef: { name: incidentlens-config, key: oidc-client-id } }
+            - name: Authentication__Scope
+              valueFrom: { configMapKeyRef: { name: incidentlens-config, key: oidc-scope } }
+            - name: Authentication__Audience
+              valueFrom: { configMapKeyRef: { name: incidentlens-config, key: oidc-audience } }
+          startupProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 4
+            failureThreshold: 3
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 20
+            failureThreshold: 3
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: '1', memory: 1Gi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities: { drop: [ALL] }
+            runAsNonRoot: true
+            seccompProfile: { type: RuntimeDefault }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+  namespace: incidentlens
+spec:
+  selector: { app: incidentlens-api }
+  ports:
+    - { name: http, port: 8080, targetPort: http }

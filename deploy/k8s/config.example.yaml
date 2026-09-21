@@ -1,0 +1,12 @@
+# Copy to deploy/k8s/config.yaml and set REAL issuer and API audience.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: incidentlens-config
+  namespace: incidentlens
+data:
+  oidc-authority: https://id.example.com/realms/incidentlens
+  oidc-audience: incidentlens-api
+  oidc-client-id: incidentlens-spa
+  oidc-scope: openid profile
+  role-claim-type: http://schemas.microsoft.com/ws/2008/06/identity/claims/role

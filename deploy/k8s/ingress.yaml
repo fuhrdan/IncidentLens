@@ -1,0 +1,24 @@
+# Replace host and TLS secret before applying. Install and configure an ingress controller.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: incidentlens
+  namespace: incidentlens
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [incidentlens.example.com]
+      secretName: incidentlens-tls
+  rules:
+    - host: incidentlens.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: web
+                port: { name: http }
