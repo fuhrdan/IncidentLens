@@ -2,6 +2,7 @@
 from pathlib import Path
 import unittest
 import yaml
+import json
 ROOT = Path(__file__).resolve().parents[2]
 
 def read(path):
@@ -54,8 +55,24 @@ class DeploymentReferenceTests(unittest.TestCase):
 
     def test_api_health_separated(self):
         source = read("api/Program.cs")
-        for token in ('app.MapHealthChecks("/health/live"', 'app.MapHealthChecks("/health/ready"', 'tags: ["ready"]', 'serviceVersion: "1.0.0"'):
+
+        for token in (
+            'app.MapHealthChecks("/health/live"',
+            'app.MapHealthChecks("/health/ready"',
+            'tags: ["ready"]',
+        ):
             self.assertIn(token, source)
+
+        # Verify that backend telemetry reports the
+        # same version as the frontend release.
+        release_version = json.loads(
+            read("web/package.json")
+        )["version"]
+
+        self.assertIn(
+            f'serviceVersion: "{release_version}"',
+            source
+        )
 
     def test_k8s_single_replica_probes_secret(self):
         api = self.k8s["Deployment", "api"]["spec"]
