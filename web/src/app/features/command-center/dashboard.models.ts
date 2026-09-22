@@ -1,3 +1,5 @@
+import { ServiceHealth } from '../../core/models/incident';
+
 /** Matches the read-only, tenant-scoped /api/dashboard/overview payload. */
 export interface DashboardSummary {
   activeIncidents: number;
@@ -24,4 +26,5 @@ export interface DashboardOverview {
   windowDays: number;
   summary: DashboardSummary;
   activeIncidents: DashboardIncident[];
+  services: ServiceHealth[];
 }

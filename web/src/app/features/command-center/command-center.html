@@ -12,7 +12,7 @@
       <a routerLink="/workspace" fragment="analytics" class="nav-link"><span aria-hidden="true">▤</span>Analytics</a>
       <a routerLink="/workspace" class="nav-link"><span aria-hidden="true">⚙</span>Incident workspace</a>
     </nav>
-    <div class="rail-bottom"><span class="online-dot"></span>{{ environmentLabel }} environment <small>IncidentLens v2.0.0</small></div>
+    <div class="rail-bottom"><span class="online-dot"></span>{{ environmentLabel }} environment <small>IncidentLens v2.0.1-dev</small></div>
   </aside>
 
   <div class="main-column">
@@ -75,6 +75,116 @@
             </section>
           </aside>
         </div>
+
+        <section class="panel service-health-panel"
+                 aria-labelledby="service-health-title">
+          <header class="panel-header">
+            <div>
+              <span class="panel-symbol blue">◈</span>
+              <h2 id="service-health-title">Service health</h2>
+              <span class="panel-count">{{ data.services.length }} displayed</span>
+            </div>
+            <a routerLink="/workspace" fragment="services">Open services →</a>
+          </header>
+
+          <div class="service-health-grid">
+            @for (service of data.services; track service.service) {
+              <article class="service-card">
+                <div class="service-card-top">
+                  <div>
+                    <a routerLink="/workspace"
+                       fragment="services"
+                       class="service-name">
+                      {{ service.service }}
+                    </a>
+                    <span class="service-incidents">
+                      {{ service.incidentCount }} incidents in window
+                    </span>
+                  </div>
+
+                  <span class="health-badge"
+                        [class.health-critical]="service.health === 'Critical'"
+                        [class.health-risk]="service.health === 'At risk'"
+                        [class.health-good]="service.health === 'Healthy'">
+                    {{ service.health }}
+                  </span>
+                </div>
+
+                <div class="service-availability">
+                  <div>
+                    <span>Latest availability</span>
+                    <strong>
+                      @if (service.trend.length) {
+                        {{ service.currentAvailabilityPercent | number:'1.2-3' }}%
+                      } @else {
+                        —
+                      }
+                    </strong>
+                  </div>
+                  <div>
+                    <span>SLO target</span>
+                    <strong>
+                      {{ service.availabilityTargetPercent | number:'1.2-3' }}%
+                    </strong>
+                  </div>
+                </div>
+
+                <div class="service-trend">
+                  @if (service.trend.length > 1) {
+                    <svg viewBox="0 0 120 40"
+                         preserveAspectRatio="none"
+                         role="img"
+                         [attr.aria-label]="'Availability trend for ' + service.service">
+                      <polyline
+                        [attr.points]="sparklinePoints(service.trend)"
+                        fill="none"
+                        stroke="#64bfff"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round" />
+                    </svg>
+                    <small>Availability trend · auto-scaled</small>
+                  } @else if (service.trend.length === 1) {
+                    <p class="service-no-data">One health sample recorded.</p>
+                  } @else {
+                    <p class="service-no-data">No availability samples recorded.</p>
+                  }
+                </div>
+
+                <div class="service-card-bottom">
+                  <span>Error budget consumed</span>
+                  <strong>
+                    {{ service.errorBudgetConsumedPercent | number:'1.0-1' }}%
+                  </strong>
+                </div>
+
+                  <div
+                    class="budget-track"
+                    role="progressbar"
+                    [class.over-budget]="service.errorBudgetConsumedPercent > 100"
+                    [attr.aria-label]="service.service + ' error budget consumed'"
+                    [attr.aria-valuenow]="budgetBarWidth(service.errorBudgetConsumedPercent)"
+                    [attr.aria-valuetext]="
+                      service.errorBudgetConsumedPercent + '% error budget consumed'
+                    "
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                  <span [style.width.%]="budgetBarWidth(service.errorBudgetConsumedPercent)"></span>
+                </div>
+              </article>
+            } @empty {
+              <p class="service-empty">
+                No configured services are available.
+                Add service objectives in the incident workspace.
+              </p>
+            }
+          </div>
+
+          <footer class="panel-footer">
+            Showing up to eight services, with services needing
+            attention first. Availability requires recorded health samples.
+          </footer>
+        </section>
       }
     </main>
   </div>

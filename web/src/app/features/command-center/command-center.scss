@@ -13,3 +13,173 @@
 @media(max-width:1350px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-grid{grid-template-columns:minmax(0,1fr)}.insight-column{display:grid;grid-template-columns:1fr 1fr}}
 @media(max-width:850px){.console-shell{grid-template-columns:minmax(0,1fr)}.rail{position:static;width:auto;height:auto;gap:14px}.rail nav{display:flex;overflow:auto}.nav-link{white-space:nowrap}.rail-bottom{display:none}.topbar{padding:12px 15px}.canvas{padding:20px 13px}.page-top{align-items:flex-start;flex-direction:column}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.insight-column{grid-template-columns:minmax(0,1fr)}.topbar-right .top-link{display:none}}
 @media(max-width:520px){.kpis{grid-template-columns:minmax(0,1fr)}.topbar-right{gap:7px}.env{font-size:10px}.topbar .global-search{padding:7px}}
+
+/* v2.1.0 — Service Health */
+
+.service-health-panel {
+  margin-top: 14px;
+}
+
+.service-health-grid {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(min(100%, 260px), 1fr)
+  );
+  gap: 14px;
+  padding: 17px;
+}
+
+.service-card {
+  min-width: 0;
+  padding: 17px;
+  border: 1px solid #304359;
+  border-radius: 9px;
+  background: linear-gradient(
+    145deg,
+    #1b3044,
+    #112132
+  );
+}
+
+.service-card-top,
+.service-availability,
+.service-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.service-name {
+  display: block;
+  color: #edf6ff;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.service-name:hover {
+  color: #75c3fd;
+  text-decoration: underline;
+}
+
+.service-incidents {
+  display: block;
+  margin-top: 7px;
+  color: #88a0b6;
+  font-size: 11px;
+}
+
+.health-badge {
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.health-critical {
+  color: #ff959d;
+  background: #642e39;
+}
+
+.health-risk {
+  color: #ffcf7a;
+  background: #634a29;
+}
+
+.health-good {
+  color: #75e1b2;
+  background: #1c5448;
+}
+
+.service-availability {
+  margin-top: 23px;
+}
+
+.service-availability span {
+  display: block;
+  margin-bottom: 7px;
+  color: #92a9be;
+  font-size: 10px;
+}
+
+.service-availability strong {
+  color: #edf6ff;
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.service-trend {
+  margin-top: 17px;
+}
+
+.service-trend svg {
+  display: block;
+  width: 100%;
+  height: 58px;
+}
+
+.service-trend small,
+.service-no-data {
+  color: #819ab0;
+  font-size: 10px;
+}
+
+.service-no-data {
+  margin: 0;
+  padding: 20px 0;
+}
+
+.service-card-bottom {
+  align-items: center;
+  margin-top: 20px;
+}
+
+.service-card-bottom span {
+  color: #91a9bf;
+  font-size: 11px;
+}
+
+.service-card-bottom strong {
+  font-size: 12px;
+  color: #dceaf5;
+}
+
+.budget-track {
+  height: 6px;
+  margin-top: 9px;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #314357;
+}
+
+.budget-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #66bef8;
+}
+
+.service-empty {
+  grid-column: 1 / -1;
+  padding: 20px;
+  color: #91a9bf;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .service-health-grid {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+}
+
+/* Let each dashboard panel use its natural content height. */
+.dashboard-grid {
+  align-items: start;
+}
+
+.budget-track.over-budget span {
+  background: #ff727e;
+}

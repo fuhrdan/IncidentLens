@@ -7,6 +7,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from './dashboard.service';
 import { DashboardOverview } from './dashboard.models';
 import { environment } from '../../../environments/environment';
+import { ServiceTrendPoint } from '../../core/models/incident';
 
 @Component({
   selector: 'app-command-center',
@@ -61,5 +62,47 @@ export class CommandCenter {
   duration(iso: string): string {
     const minutes = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60_000));
     return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`;
+  }
+
+  readonly Math = Math;
+
+  budgetBarWidth(value: number): number {
+    return Math.max(0, Math.min(100, value));
+  }
+
+  /**
+   * Build an automatically scaled availability sparkline.
+   *
+   * Service availability often varies within a fraction
+   * of one percent. An absolute 0–100 chart would make
+   * meaningful changes nearly invisible.
+   *
+   * The graph is deliberately labeled "auto-scaled" so
+   * operators do not mistake its vertical range for
+   * an absolute availability scale.
+   */
+  sparklinePoints(trend: ServiceTrendPoint[]): string {
+    if (trend.length < 2) {
+      return '';
+    }
+
+    const values = trend.map(point =>
+      Math.max(
+        0,
+        Math.min(100, point.availabilityPercent)
+      )
+    );
+
+    const minimum = Math.min(...values);
+    const maximum = Math.max(...values);
+
+    const range = Math.max(0.1, maximum - minimum);
+
+    return values.map((value, index) => {
+      const x = index * 120 / (values.length - 1);
+      const y = 34 - ((value - minimum) / range) * 28;
+
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    }).join(' ');
   }
 }

@@ -209,6 +209,111 @@ public sealed class TenantIsolationTests(ApiFactory factory) : IClassFixture<Api
             (await factory.CreateClient().GetAsync("/api/dashboard/overview")).StatusCode);
     }
 
+[Fact]
+public async Task Command_center_services_are_bounded_and_tenant_scoped()
+{
+    var alphaTenant = $"dashboard-{Guid.NewGuid():N}";
+    var betaTenant = $"dashboard-{Guid.NewGuid():N}";
+
+    // Seed ten objectives for alpha and a distinct objective for beta.
+    // No health samples means availability is not fabricated by this test.
+    await using (var scope = factory.Services.CreateAsyncScope())
+    {
+        var tenant = scope.ServiceProvider
+            .GetRequiredService<TenantContext>();
+
+        var database = scope.ServiceProvider
+            .GetRequiredService<IncidentLensDbContext>();
+
+        using (tenant.ForBackgroundTenant(alphaTenant))
+        {
+            for (var index = 0; index < 10; index++)
+            {
+                database.ServiceObjectives.Add(
+                    new ServiceObjectiveRecord
+                    {
+                        Id = Guid.NewGuid(),
+                        Service = $"S-{index:00}",
+                        OwnerTeam = "Alpha operations",
+                        AvailabilityTargetPercent = 99.9m,
+                    });
+            }
+
+            await database.SaveChangesAsync();
+        }
+
+        using (tenant.ForBackgroundTenant(betaTenant))
+        {
+            database.ServiceObjectives.Add(
+                new ServiceObjectiveRecord
+                {
+                    Id = Guid.NewGuid(),
+                    Service = "Beta-only service",
+                    OwnerTeam = "Beta operations",
+                    AvailabilityTargetPercent = 99.9m,
+                });
+
+            await database.SaveChangesAsync();
+        }
+    }
+
+    using var alpha = Authenticated(alphaTenant, "Viewer");
+    using var beta = Authenticated(betaTenant, "Viewer");
+
+    var alphaDashboard = await alpha.GetFromJsonAsync<JsonElement>(
+        "/api/dashboard/overview?days=7");
+
+    var betaDashboard = await beta.GetFromJsonAsync<JsonElement>(
+        "/api/dashboard/overview?days=7");
+
+    var alphaServices = alphaDashboard
+        .GetProperty("services")
+        .EnumerateArray()
+        .ToArray();
+
+    var betaServices = betaDashboard
+        .GetProperty("services")
+        .EnumerateArray()
+        .ToArray();
+
+    // The API, not only Angular, must enforce the eight-service limit.
+    Assert.Equal(8, alphaServices.Length);
+
+    // All seeded services have the same health classification, so
+    // the secondary alphabetical sort determines their order.
+    Assert.Equal(
+        Enumerable.Range(0, 8)
+            .Select(index => $"S-{index:00}"),
+        alphaServices.Select(service =>
+            service.GetProperty("service").GetString()));
+
+    // Ensure the response contains the health fields the UI requires.
+    Assert.All(alphaServices, service =>
+    {
+        Assert.True(service.TryGetProperty(
+            "currentAvailabilityPercent", out _));
+
+        Assert.True(service.TryGetProperty(
+            "availabilityTargetPercent", out _));
+
+        Assert.True(service.TryGetProperty(
+            "errorBudgetConsumedPercent", out _));
+
+        Assert.True(service.TryGetProperty("trend", out _));
+    });
+
+    // Neither tenant can see the other's service objectives.
+    Assert.Single(betaServices);
+
+    Assert.Equal(
+        "Beta-only service",
+        betaServices[0].GetProperty("service").GetString());
+
+    Assert.DoesNotContain(
+        alphaServices,
+        service => service.GetProperty("service").GetString()
+            == "Beta-only service");
+}
     private HttpClient Authenticated(string tenant, string role)
     {
         var client = factory.CreateClient();

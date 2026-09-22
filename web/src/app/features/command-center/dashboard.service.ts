@@ -33,6 +33,19 @@ export class DashboardService {
           mttrMinutes: analytics.metrics.resolvedIncidents ? analytics.metrics.meanTimeToResolveMinutes : null,
           servicesAtRisk: analytics.services.filter(service => service.health !== 'Healthy').length,
         },
+        services: analytics.services
+          .slice()
+          .sort((a, b) => {
+            const priority = {
+              Critical: 0,
+              'At risk': 1,
+              Healthy: 2,
+            };
+
+            return priority[a.health] - priority[b.health]
+            || a.service.localeCompare(b.service);
+          })
+          .slice(0, 8),
         activeIncidents: open.slice().sort((a, b) => b.declaredAt.localeCompare(a.declaredAt))
           .slice(0, 12).map(incident => ({
             id: incident.id, title: incident.title, severity: incident.severity,

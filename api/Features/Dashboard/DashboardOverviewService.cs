@@ -53,8 +53,31 @@ public sealed class DashboardOverviewService(
         var mttr = overview.Metrics.ResolvedIncidents == 0
             ? (decimal?)null : overview.Metrics.MeanTimeToResolveMinutes;
 
-        return new DashboardOverview(clock.GetUtcNow(), days,
-            new DashboardSummary(total, critical, mtta, mttr,
-                overview.Services.Count(service => service.Health != "Healthy")), rows);
+        // Show services needing attention first.
+        // Reuse the tenant-scoped analytics results so the dashboard
+        // and reliability workspace report consistent measurements.
+        var services = overview.Services
+            .OrderBy(service => service.Health switch
+            {
+                "Critical" => 0,
+                "At risk" => 1,
+                _ => 2,
+            })
+            .ThenBy(service => service.Service)
+            .Take(8)
+            .ToList();
+
+        return new DashboardOverview(
+            clock.GetUtcNow(),
+            days,
+            new DashboardSummary(
+                total,
+                critical,
+                mtta,
+                mttr,
+                overview.Services.Count(
+                    service => service.Health != "Healthy")),
+            rows,
+            services);
     }
 }
