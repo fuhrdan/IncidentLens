@@ -20,9 +20,24 @@ public sealed record DashboardIncident(
     int ResponderCount,
     DateTimeOffset DeclaredAt);
 
+/// <summary>
+/// A recent incident timeline event for the Operations Command Center.
+/// IncidentId is retained so the UI can link to the incident workspace.
+/// </summary>
+public sealed record DashboardActivity(
+    Guid Id,
+    string IncidentId,
+    string IncidentTitle,
+    string Service,
+    string Actor,
+    string Type,
+    string Message,
+    DateTimeOffset OccurredAt);
+
 public sealed record DashboardOverview(
     DateTimeOffset GeneratedAt,
     int WindowDays,
     DashboardSummary Summary,
     IReadOnlyList<DashboardIncident> ActiveIncidents,
-    IReadOnlyList<ServiceHealthResponse> Services);
+    IReadOnlyList<ServiceHealthResponse> Services,
+    IReadOnlyList<DashboardActivity> RecentActivity);

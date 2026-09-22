@@ -22,7 +22,29 @@ export class DashboardService {
       page: this.gateway.list({ query: '', severity: 'All', status: 'All', ownerTeam: '' }, 1, 100),
       analytics: this.gateway.analytics(days),
     }).pipe(map(({ page, analytics }) => {
-      const open = page.items.filter(incident => incident.status !== 'Resolved');
+      const open = page.items.filter(
+        incident => incident.status !== 'Resolved'
+      );
+
+      const recentActivity = page.items
+        .flatMap(incident =>
+          incident.timeline.map(event => ({
+            id: event.id,
+            incidentId: incident.id,
+            incidentTitle: incident.title,
+            service: incident.service,
+            actor: event.actor,
+            type: event.type,
+            message: event.message,
+            occurredAt: event.occurredAt,
+          }))
+        )
+        .sort((a, b) =>
+          b.occurredAt.localeCompare(a.occurredAt)
+          || b.id.localeCompare(a.id)
+        )
+        .slice(0, 5);
+
       return {
         generatedAt: new Date().toISOString(),
         windowDays: days,
@@ -53,6 +75,9 @@ export class DashboardService {
             service: incident.service, responderCount: incident.responders.length,
             declaredAt: incident.declaredAt,
           })),
+
+        recentActivity,
+
       } satisfies DashboardOverview;
     }));
   }

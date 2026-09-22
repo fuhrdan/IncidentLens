@@ -183,3 +183,45 @@
 .budget-track.over-budget span {
   background: #ff727e;
 }
+
+/* v2.1.0 — Recent operational activity */
+
+.activity-details {
+  min-width: 0;
+}
+
+.activity-details b,
+.activity-details p,
+.activity-details small {
+  overflow-wrap: anywhere;
+}
+
+.activity-details b a {
+  color: #75c3fd;
+}
+
+.activity-details b a:hover {
+  text-decoration: underline;
+}
+
+.activity-details p {
+  margin: 7px 0;
+  color: #b5c9da;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.activity-mark.activity-declared {
+  background: #643039;
+  color: #ff929e;
+}
+
+.activity-mark.activity-status {
+  background: #294d6e;
+  color: #9bddff;
+}
+
+.activity-mark.activity-responder {
+  background: #1c5448;
+  color: #75e1b2;
+}

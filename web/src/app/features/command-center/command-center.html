@@ -67,11 +67,63 @@
                 <div class="focus-split"><div><span>Open overall</span><b>{{ data.summary.activeIncidents }}</b></div><div><span>SLO risk</span><b>{{ data.summary.servicesAtRisk }}</b></div></div>
                 <a routerLink="/workspace" fragment="automation">Review reliability signals →</a></div>
             </section>
-            <section class="panel recent-panel" aria-labelledby="recent-title"><header class="panel-header"><div><span class="panel-symbol blue">◷</span><h2 id="recent-title">Recent declarations</h2></div></header>
-              <ul class="declarations">@for (incident of data.activeIncidents.slice(0, 5); track incident.id) {
-                <li><span class="activity-mark" [class]="incident.severity.toLowerCase()">!</span><div><b>{{ incident.id }} · {{ incident.title }}</b><small>{{ incident.ownerTeam }} · {{ incident.declaredAt | date:'MMM d, h:mm a' }}</small></div></li>
-              } @empty { <li class="empty">No active incident declarations.</li> }</ul>
-              <footer class="panel-footer">Incident declarations only. Full event timeline is in the workspace.</footer>
+
+            <section class="panel recent-panel"
+                     aria-labelledby="recent-title">
+
+              <header class="panel-header">
+                <div>
+                  <span class="panel-symbol blue">◷</span>
+                  <h2 id="recent-title">Recent activity</h2>
+                </div>
+
+                <a routerLink="/workspace" fragment="incidents">
+                  Open workspace →
+                </a>
+              </header>
+
+              <ul class="declarations">
+                @for (activity of data.recentActivity; track activity.id) {
+                  <li>
+                    <span
+                      class="activity-mark"
+                      [class.activity-declared]="activity.type === 'declared'"
+                      [class.activity-status]="activity.type === 'status'"
+                      [class.activity-responder]="activity.type === 'responder'"
+                      aria-hidden="true">
+                      {{ activity.type === 'declared' ? '!' :
+                         activity.type === 'status' ? '↻' :
+                         activity.type === 'responder' ? '+' : '·' }}
+                    </span>
+
+                    <div class="activity-details">
+                      <b>
+                        <a routerLink="/workspace" fragment="incidents">
+                          {{ activity.incidentId }}
+                        </a>
+                        · {{ activity.incidentTitle }}
+                      </b>
+
+                      <p>{{ activity.message }}</p>
+
+                      <small>
+                        {{ activity.actor }}
+                        · {{ activity.service }}
+                        · {{ activity.occurredAt | date:'MMM d, h:mm a' }}
+                      </small>
+                    </div>
+                  </li>
+                } @empty {
+                  <li class="empty">
+                    No incident activity in this reporting window.
+                  </li>
+                }
+              </ul>
+
+              <footer class="panel-footer">
+                Latest five timeline events. Includes activity from
+                resolved incidents.
+              </footer>
             </section>
           </aside>
         </div>

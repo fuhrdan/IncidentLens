@@ -1,4 +1,5 @@
 import { ServiceHealth } from '../../core/models/incident';
+import { TimelineEventType } from '../../core/models/incident';
 
 /** Matches the read-only, tenant-scoped /api/dashboard/overview payload. */
 export interface DashboardSummary {
@@ -27,4 +28,16 @@ export interface DashboardOverview {
   summary: DashboardSummary;
   activeIncidents: DashboardIncident[];
   services: ServiceHealth[];
+  recentActivity: DashboardActivity[];
+}
+
+export interface DashboardActivity {
+  id: string;
+  incidentId: string;
+  incidentTitle: string;
+  service: string;
+  actor: string;
+  type: TimelineEventType;
+  message: string;
+  occurredAt: string;
 }

@@ -67,6 +67,58 @@ public sealed class DashboardOverviewService(
             .Take(8)
             .ToList();
 
+        // Both sides of this join retain their DbContext tenant filters.
+        // Do not use IgnoreQueryFilters here: the dashboard must never
+        // display another tenant's incident activity.
+        var activityQuery = database.TimelineEvents
+            .AsNoTracking()
+            .Join(
+                database.Incidents.AsNoTracking(),
+                entry => entry.IncidentId,
+                incident => incident.Id,
+                (entry, incident) => new
+                {
+                    entry.Id,
+                    entry.OccurredAt,
+                    entry.Actor,
+                    entry.Type,
+                    entry.Message,
+                    incident.Sequence,
+                    incident.Title,
+                    incident.Service,
+                });
+
+        var activityCutoff = clock.GetUtcNow().AddDays(-days);
+
+        // PostgreSQL can filter and order DateTimeOffset values in SQL.
+        // SQLite development databases need the timestamp comparison
+        // performed in .NET, as elsewhere in the existing analytics code.
+        var activityRows = database.Database.IsSqlite()
+            ? (await activityQuery.ToListAsync(cancellationToken))
+                .Where(entry => entry.OccurredAt >= activityCutoff)
+                .OrderByDescending(entry => entry.OccurredAt)
+                .ThenByDescending(entry => entry.Id)
+                .Take(5)
+                .ToList()
+            : await activityQuery
+                .Where(entry => entry.OccurredAt >= activityCutoff)
+                .OrderByDescending(entry => entry.OccurredAt)
+                .ThenByDescending(entry => entry.Id)
+                .Take(5)
+                .ToListAsync(cancellationToken);
+
+        var recentActivity = activityRows
+            .Select(entry => new DashboardActivity(
+                entry.Id,
+                $"INC-{entry.Sequence}",
+                entry.Title,
+                entry.Service,
+                entry.Actor,
+                entry.Type.ToString().ToLowerInvariant(),
+                entry.Message,
+                entry.OccurredAt))
+            .ToList();
+
         return new DashboardOverview(
             clock.GetUtcNow(),
             days,
@@ -78,6 +130,7 @@ public sealed class DashboardOverviewService(
                 overview.Services.Count(
                     service => service.Health != "Healthy")),
             rows,
-            services);
+            services,
+            recentActivity);
     }
 }
